@@ -436,6 +436,13 @@ class Game:
         if self.scores > self.max_scores:
             self.max_scores = self.scores
 
+        file = open("records.txt", 'a')
+        file.write(str(self.max_scores))
+        file.write(" очков ")
+        file.write(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        file.write("\n")
+        file.close()
+
         stopped = True
         while stopped:
             for event in pygame.event.get():
@@ -459,11 +466,6 @@ class Game:
             pygame.display.update()
             clock.tick(15)
 
-            file = open("records.txt", 'w')
-            file.write(str(self.max_scores))
-            file.write(" очков ")
-            file.write("\n")
-            file.close()
 
     def show_health(self):
         # прорисовка сердечек
