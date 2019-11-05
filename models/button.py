@@ -1,5 +1,5 @@
-from sounds import button_sound
-from effects import *
+from materials.sounds import button_sound
+from materials.effects import *
 
 pygame.init()
 

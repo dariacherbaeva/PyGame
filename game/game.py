@@ -1,19 +1,21 @@
+import os
+from datetime import datetime
 
-from sounds import *
-from object import *
-from bullet import *
-from button import *
-from bird import *
-from images import *
-import parameters as p
-from effects import *
+from models.object import *
+from models.bullet import *
+from models.button import *
+from models.bird import *
+from materials.images import *
+from materials import parameters as p
+from materials.effects import *
+from materials.sounds import *
 
 
 class Game:
     def __init__(self):
-        pygame.display.set_caption('Game')  # название игры
+        pygame.display.set_caption('Run Away!')  # название игры
 
-        pygame.mixer_music.load('Attack.mp3')  # музыка
+        pygame.mixer_music.load('sounds/Attack.mp3')  # музыка
         pygame.mixer_music.set_volume(0.15)
 
         pygame.display.set_icon(icon)
@@ -29,7 +31,7 @@ class Game:
         self.cd = 0
 
     def show_menu(self):
-        menu_bckgr = pygame.image.load('Menu.jpg')
+        menu_bckgr = pygame.image.load('images/Menu.jpg')
 
         start_btn = Button(288, 70)
         quit_btn = Button(120, 70)
@@ -48,36 +50,33 @@ class Game:
             pygame.display.update()
             clock.tick(60)
 
-
     def start_game(self):
         """ Функция расширения run_game()
         Введена для работы с рекордами
         Обнуляет положение игрока(без нее можно было начать новую игру в прыжке)
         """
-        global scores, make_jump, jump_counter, usr_y, health, cd
-        scores = 0
-        make_jump = False
-        jump_counter = 30
-        usr_y = display_height - usr_height - 100
-        health = 2
-        cd = 0
-        while self.game_cycle():
-            scores = 0
-            make_jump = False
-            jump_counter = 30
-            p.usr_y = p.display_height - p.usr_height - 100
-            health = 2
-            cd = 0
 
+        self.scores = 0
+        self.make_jump = False
+        self.jump_counter = 30
+        p.usr_y = display_height - usr_height - 100
+        self.health = 2
+        self.cd = 0
+        while self.game_cycle():
+            self.scores = 0
+            self.make_jump = False
+            self.jump_counter = 30
+            p.usr_y = p.display_height - p.usr_height - 100
+            self.health = 2
+            self.cd = 0
 
     def game_cycle(self):  # главный цикл для работы игры
-        global make_jump, cd
         pygame.mixer.music.play(-1)
 
         game = True
         barrier_arr = []
         self.create_barrier_arr(barrier_arr)
-        land = pygame.image.load('Land.jpg')
+        land = pygame.image.load('images/Land.jpg')
 
         stone, cloud = self.open_random_objects()
         heart = Object(display_width, 280, 30, health_img, 4)
@@ -103,7 +102,7 @@ class Game:
 
             # ниже описана прорисовка фона, препятствий, гг и элементов декора (камни, облака), а также вывод рекорда
             display.blit(land, (0, 0))
-            print_text('Рекорд: ' + str(scores), 600, 10)
+            print_text('Рекорд: ' + str(self.scores), 600, 10)
 
             self.draw_array(barrier_arr)
             self.move_objects(stone, cloud)
@@ -119,22 +118,22 @@ class Game:
 
             if keys[pygame.K_ESCAPE]:
                 self.pause()
-            if not cd:
+            if not self.cd:
                 if keys[pygame.K_x]:
                     pygame.mixer.Sound.play(bullet_sound)
                     all_btn_bullets.append(Bullet(usr_x + usr_width, usr_y))
-                    cd = 50
+                    self.cd = 50
                 elif click[0]:
                     pygame.mixer.Sound.play(bullet_sound)
                     add_bullet = Bullet(usr_x + usr_width, usr_y + 28)
                     add_bullet.find_path(mouse[0], mouse[1])
 
                     all_ms_bullets.append(add_bullet)
-                    cd = 50
+                    self.cd = 50
 
             else:
-                print_text('Кд - ' + str(cd // 10), 600, 40)
-                cd -= 1
+                print_text('Кд - ' + str(self.cd // 10), 600, 40)
+                self.cd -= 1
 
             for bullet in all_btn_bullets:
                 if not bullet.move():
@@ -146,8 +145,6 @@ class Game:
 
             heart.move()
             self.hearts_plus(heart)
-
-
 
             if self.check_collision(barrier_arr):
                 pygame.mixer.music.stop()
@@ -162,7 +159,6 @@ class Game:
             pygame.display.update()
             clock.tick(70)
         return self.game_over()
-
 
     def jump(self):
         """ Функция прыжка
@@ -199,7 +195,6 @@ class Game:
         width = barrier_options[choice * 2]
         height = barrier_options[choice * 2 + 1]
         array.append(Object(display_width + 600, height, width, img, 4))
-
 
     @staticmethod
     def find_radius(array):
@@ -245,7 +240,6 @@ class Game:
             if not check:
                 self.object_return(array, barrier)
 
-
     def object_return(self, objects, obj):
         """Вспомогательная функция
         Выделена как общий случай.
@@ -278,7 +272,6 @@ class Game:
 
         return stone, cloud
 
-
     @staticmethod
     def move_objects(stone, cloud):
         """ Функция выполняющий движение дополнительных объектов.
@@ -288,27 +281,24 @@ class Game:
         if not check:
             choice = random.randrange(0, 2)
             img_of_stone = stone_img[choice]
-            stone.return_self(display_width, 500 + random.randrange(10, 80), stone.width, img_of_stone)
+            stone.return_self(p.display_width, 500 + random.randrange(10, 80), stone.width, img_of_stone)
 
         check = cloud.move()
         if not check:
             choice = random.randrange(0, 2)
             img_of_cloud = cloud_img[choice]
-            cloud.return_self(display_width, random.randrange(10, 200), stone.width, img_of_cloud)
-
+            cloud.return_self(p.display_width, random.randrange(10, 200), stone.width, img_of_cloud)
 
     def draw_pers(self):
         """ Функция анимации ГГ.
         Перебирает 5 картинок, каждая срабатывает по 5 раз, тк
         быстрые тики в игре делают анимацию слишком быстрой.
         """
-        global img_counter
         if self.img_counter == 25:
             self.img_counter = 0
 
         display.blit(pers_img[self.img_counter // 5], (p.usr_x, p.usr_y))
         self.img_counter += 1
-
 
     @staticmethod
     def pause():
@@ -337,7 +327,6 @@ class Game:
 
         pygame.mixer.music.unpause()
 
-
     def check_collision(self, barriers):
         """ Функция улучшенной логики столкновения ГГ с препятствием.
         Обработка случаев когда правый нижний угол ГГ задевает препятствие.
@@ -363,7 +352,7 @@ class Game:
 
                 elif self.jump_counter >= 0:
                     if p.usr_y + p.usr_height - 5 >= barrier.y:
-                        if barrier.x <= p.usr_x + usr_width - 35 <= barrier.x + barrier.width:
+                        if barrier.x <= p.usr_x + p.usr_width - 35 <= barrier.x + barrier.width:
                             if self.check_health():
                                 self.object_return(barriers, barrier)
                                 pygame.mixer.Sound.play(fall_sound)
@@ -381,25 +370,25 @@ class Game:
                                 return True
             else:
                 if not self.make_jump:
-                    if barrier.x <= p.usr_x + usr_width - 5 <= barrier.x + barrier.width:
+                    if barrier.x <= p.usr_x + p.usr_width - 5 <= barrier.x + barrier.width:
                         if self.check_health():
                             self.object_return(barriers, barrier)
                             pygame.mixer.Sound.play(fall_sound)
                             return False
                         else:
                             return True
-                elif jump_counter == 10:
+                elif self.jump_counter == 10:
                     if p.usr_y + usr_height - 5 >= barrier.y:
-                        if barrier.x <= p.usr_x + usr_width - 5 <= barrier.x + barrier.width:
+                        if barrier.x <= p.usr_x + p.usr_width - 5 <= barrier.x + barrier.width:
                             if self.check_health():
                                 self.object_return(barriers, barrier)
                                 pygame.mixer.Sound.play(fall_sound)
                                 return False
                             else:
                                 return True
-                elif jump_counter >= -1:
+                elif self.jump_counter >= -1:
                     if p.usr_y + usr_height - 5 >= barrier.y:
-                        if barrier.x <= p.usr_x + usr_width - 35 <= barrier.x + barrier.width:
+                        if barrier.x <= p.usr_x + p.usr_width - 35 <= barrier.x + barrier.width:
                             if self.check_health():
                                 self.object_return(barriers, barrier)
                                 pygame.mixer.Sound.play(fall_sound)
@@ -417,7 +406,6 @@ class Game:
                                     return True
         return False
 
-
     def count_scores(self, barriers):
         """ Функция засчитывания очков
         Увеличивает кол-во очков за каждое перепрыгнутое препятствие
@@ -425,20 +413,19 @@ class Game:
         """
         above_barrier = 0
 
-        if -20 <= jump_counter < 25:
+        if -20 <= self.jump_counter < 25:
             for barrier in barriers:
-                if p.usr_y + usr_height - 5 <= barrier.y:
+                if p.usr_y + p.usr_height - 5 <= barrier.y:
                     if barrier.x <= p.usr_x <= barrier.x + barrier.width:
                         above_barrier += 1
-                    elif barrier.x <= p.usr_x + usr_width <= barrier.x + barrier.width:
+                    elif barrier.x <= p.usr_x + p.usr_width <= barrier.x + barrier.width:
                         above_barrier += 1
 
             self.max_above = max(self.max_above, above_barrier)
         else:
-            if jump_counter == -30:
+            if self.jump_counter == -30:
                 self.scores += self.max_above
                 self.max_above = 0
-
 
     def game_over(self):
         """ Функция описывающая поведение при окончании игры
@@ -472,6 +459,12 @@ class Game:
             pygame.display.update()
             clock.tick(15)
 
+            file = open("records.txt", 'w')
+            file.write(str(self.max_scores))
+            file.write(" очков ")
+            file.write("\n")
+            file.close()
+
     def show_health(self):
         # прорисовка сердечек
         show = 0
@@ -481,7 +474,6 @@ class Game:
             x += 40
             show += 1
 
-
     def check_health(self):
         # проверка на наличие сердечек. 0 = конец
         self.health -= 1
@@ -489,7 +481,6 @@ class Game:
             return False
         else:
             return True
-
 
     def hearts_plus(self, heart):
         if heart.x <= -heart.width:
@@ -504,7 +495,6 @@ class Game:
 
                 radius = p.display_width + random.randrange(500, 1700)
                 heart.return_self(radius, heart.y, heart.width, heart.image)
-
 
     @staticmethod
     def draw_birds(birds):

@@ -1,5 +1,5 @@
-from parameters import *
-from images import *
+from materials.parameters import *
+from materials.images import *
 
 pygame.init()
 

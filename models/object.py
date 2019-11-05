@@ -1,5 +1,5 @@
 import pygame
-from parameters import display
+from materials.parameters import display
 
 pygame.init()
 

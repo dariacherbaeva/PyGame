@@ -1,4 +1,4 @@
-from parameters import *
+from materials.parameters import *
 
 pygame.init()
 

@@ -1,6 +1,6 @@
 import random
-from parameters import *
-from images import *
+from materials.parameters import *
+from materials.images import *
 
 
 class Bird:
